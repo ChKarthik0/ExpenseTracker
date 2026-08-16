@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Tracker - {% block title %}{% endblock %}</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+  {% block head %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- ✅ NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 sticky-top shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('home.home') }}">
+        <i class="fas fa-wallet me-2"></i>
+        <span>ExpenseTracker</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        {% if current_user.is_authenticated %}
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.dashboard_home') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.add_expense') }}"><i class="fas fa-minus-circle me-1"></i>Add Expense</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.add_income') }}"><i class="fas fa-plus-circle me-1"></i>Add Income</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.transactions') }}"><i class="fas fa-exchange-alt me-1"></i>Transactions</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.budget') }}"><i class="fas fa-chart-pie me-1"></i>Budget</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.insights') }}"><i class="fas fa-chart-line me-1"></i>Insights</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="exportDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-file-export me-1"></i> Export
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+              <li>
+                <a class="dropdown-item" href="{{ url_for('dashboard.export_csv') }}">
+                  <i class="fas fa-file-csv me-2"></i> Export CSV
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{{ url_for('dashboard.export_pdf') }}">
+                  <i class="fas fa-file-pdf me-2"></i> Export PDF
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user-circle me-2"></i> 
+              <span class="d-none d-lg-inline">{{ current_user.username }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ url_for('dashboard.profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+        {% else %}
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt me-1"></i>Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus me-1"></i>Register</a></li>
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- ✅ FLASH MESSAGES -->
+  <div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+            <div class="d-flex align-items-center">
+              {% if category == 'success' %}
+                <i class="fas fa-check-circle me-2"></i>
+              {% elif category == 'danger' %}
+                <i class="fas fa-exclamation-circle me-2"></i>
+              {% elif category == 'warning' %}
+                <i class="fas fa-exclamation-triangle me-2"></i>
+              {% else %}
+                <i class="fas fa-info-circle me-2"></i>
+              {% endif %}
+              <div>{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- ✅ MAIN CONTENT -->
+  <main class="container my-4 flex-grow-1">
+    
+    {% if request.endpoint == 'home.home' %}
+      {% if current_user.is_authenticated %}
+        <!-- Show welcome section when logged in -->
+        <div class="text-center my-5">
+          <h1 class="fw-bold">👋 Welcome back, {{ current_user.username }}!</h1>
+          <p class="lead">We’re glad to see you again. Here’s a quick summary of your finances.</p>
+          <a href="{{ url_for('dashboard.dashboard_home') }}" class="btn btn-primary mt-3">
+            Go to Dashboard
+          </a>
+        </div>
+      {% else %}
+        <!-- Show public landing section when logged out -->
+        <div class="text-center my-5">
+          <h1 class="fw-bold">💰 Expense Tracker</h1>
+          <p class="lead">Track your expenses, manage your budget, and gain insights into your spending habits.</p>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-success mt-3 me-2">Login</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary mt-3">Register</a>
+        </div>
+      {% endif %}
+    {% else %}
+      <!-- Normal content for other pages -->
+      {% block content %}{% endblock %}
+    {% endif %}
+
+  </main>
+
+  <!-- ✅ FOOTER -->
+  <footer class="footer mt-auto py-3 bg-light border-top">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6 text-center text-md-start">
+          <span class="text-muted">&copy; {{ 2025 }} Expense Tracker. All rights reserved.</span>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <a href="#" class="text-decoration-none text-muted me-3"><i class="fas fa-question-circle me-1"></i> Help</a>
+          <a href="#" class="text-decoration-none text-muted me-3"><i class="fas fa-shield-alt me-1"></i> Privacy</a>
+          <a href="#" class="text-decoration-none text-muted"><i class="fas fa-file-alt me-1"></i> Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ✅ BOOTSTRAP JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

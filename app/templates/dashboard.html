@@ -1,0 +1,276 @@
+  {% extends "base.html" %}
+
+  {% block title %}Dashboard{% endblock %}
+
+  {% block content %}
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="card h-100 border-start border-4 border-danger">
+         <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Today's Spending</h6>
+              <h4 class="mb-0">₹{{ "%.2f"|format(today_expenses|default(0)) }}</h4>
+              <small class="text-muted">{{ today_transaction_count }} transaction{{ 's' if today_transaction_count != 1 else '' }} today</small>
+            </div>
+          <div class="bg-danger bg-opacity-10 p-3 rounded">
+          <i class="fas fa-money-bill-wave text-danger"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="card h-100 border-start border-4 border-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Monthly Income</h6>
+              <h4 class="mb-0">₹{{ "%.2f"|format(monthly_income|default(0)) }}</h4>
+            </div>
+            <div class="bg-success bg-opacity-10 p-3 rounded">
+              <i class="fas fa-wallet text-success"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="card h-100 border-start border-4 border-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-2">Monthly Expenses</h6>
+              <h4 class="mb-0">₹{{ "%.2f"|format(monthly_expenses|default(0)) }}</h4>
+            </div>
+            <div class="bg-warning bg-opacity-10 p-3 rounded">
+              <i class="fas fa-shopping-cart text-warning"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+  <div class="card h-100 border-start border-4 border-primary">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h6 class="text-muted mb-2">Budget Usage</h6>
+          <h4 class="mb-0">{{ budget_usage|default(0)|round(1) }}%</h4>
+        </div>
+        <div class="bg-primary bg-opacity-10 p-3 rounded">
+          <i class="fas fa-chart-pie text-primary"></i>
+        </div>
+      </div>
+      <div class="mt-3">
+        <div class="progress" style="height: 6px;">
+          <div class="progress-bar bg-primary" role="progressbar"
+            style="width: {{ budget_usage|default(0)|round(1) }}%;"
+            aria-valuenow="{{ budget_usage|default(0)|round(1) }}"
+            aria-valuemin="0" aria-valuemax="100">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Quick Actions</h5>
+          <div>
+            <a href="{{ url_for('dashboard.add_expense') }}" class="btn btn-danger btn-sm me-2">
+              <i class="fas fa-plus me-1"></i> Add Expense
+            </a>
+            <a href="{{ url_for('dashboard.add_income') }}" class="btn btn-success btn-sm">
+              <i class="fas fa-plus me-1"></i> Add Income
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts + Transactions -->
+  <div class="row">
+     <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Expenses Breakdown</h5>
+            <canvas id="expensesPieChart" width="300" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Income Breakdown</h5>
+            <canvas id="incomePieChart" width="300" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+      
+
+    <!-- Transactions Section -->
+    <div class="col-lg-4 mb-4">
+  <div class="card h-100">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="card-title mb-0">Recent Transactions</h5>
+        <a href="{{ url_for('dashboard.transactions') }}" class="btn btn-sm btn-outline-primary">View All</a>
+      </div>
+
+      {% if recent_transactions %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <tbody>
+            {% for transaction in recent_transactions %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="p-2 rounded-circle bg-{{ 'success' if transaction.type == 'income' else 'danger' }}-subtle">
+                    <i class="fas fa-{{ 'arrow-down' if transaction.type == 'income' else 'arrow-up' }} text-{{ 'success' if transaction.type == 'income' else 'danger' }}"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="mb-0">{{ transaction.category }}</h6>
+                    <small class="text-muted">{{ transaction.date.strftime('%b %d') }}</small>
+                  </div>
+                </div>
+              </td>
+              <td class="text-end">
+                <span class="text-{{ 'success' if transaction.type == 'income' else 'danger' }} fw-bold">
+                  {{ '+' if transaction.type == 'income' else '-' }}₹{{ "%.2f"|format(transaction.amount) }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="mb-3">
+          <i class="fas fa-exchange-alt fa-3x text-muted"></i>
+        </div>
+        <h5>No transactions yet</h5>
+        <p class="text-muted">Add your first transaction to get started</p>
+        <a href="{{ url_for('dashboard.add_expense') }}" class="btn btn-primary">Add Transaction</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+  </div>
+
+  <!-- Budget Overview -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Budget Overview</h5>
+          {% if budgets %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Budget</th>
+                  <th>Spent</th>
+                  <th>Remaining</th>
+                  <th>Progress</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for budget in budgets %}
+                <tr>
+                  <td>{{ budget.category }}</td>
+                  <td>₹{{ "%.2f"|format(budget.amount) }}</td>
+                  <td>₹{{ "%.2f"|format(budget.spent|default(0)) }}</td>
+                  <td>₹{{ "%.2f"|format((budget.amount - budget.spent)|default(budget.amount)) }}</td>
+                  <td>
+                    {% set percentage = (budget.spent / budget.amount * 100)|round(1) if budget.spent else 0 %}
+                    <div class="progress" style="height: 6px;">
+                      <div class="progress-bar
+                        {% if percentage < 80 %}bg-success
+                        {% elif percentage < 100 %}bg-warning
+                        {% else %}bg-danger
+                        {% endif %}"
+                        role="progressbar"
+                        style="width: {{ percentage }}%;"
+                        aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
+                      </div>
+                    </div>
+                    <small class="text-muted">{{ percentage }}%</small>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="text-end">
+            <a href="{{ url_for('dashboard.budget') }}" class="btn btn-outline-primary">Manage Budgets</a>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <div class="mb-3">
+              <i class="fas fa-chart-pie fa-3x text-muted"></i>
+            </div>
+            <h5>No budgets set up</h5>
+            <p class="text-muted">Create budgets to track your spending against limits</p>
+            <a href="{{ url_for('dashboard.budget') }}" class="btn btn-primary">Set Up Budgets</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endblock %}
+
+  {% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const expensesCtx = document.getElementById('expensesPieChart');
+  const incomeCtx = document.getElementById('incomePieChart');
+  const trendsCtx = document.getElementById('trendsPieChart');
+
+  new Chart(expensesCtx, {
+    type: 'pie',
+    data: {
+      labels: {{ expense_labels|default([]) | tojson }},
+      datasets: [{
+        label: 'Expenses',
+        data: {{ expense_values|default([]) | tojson }},
+        backgroundColor: ['#f87171', '#fb923c', '#facc15', '#34d399', '#60a5fa'],
+        borderWidth: 1
+      }]
+    }
+  });
+
+  new Chart(incomeCtx, {
+    type: 'pie',
+    data: {
+      labels: {{ income_labels|default([]) | tojson }},
+      datasets: [{
+        label: 'Income',
+        data: {{ income_values |default([])| tojson }},
+        backgroundColor: ['#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d'],
+        borderWidth: 1
+      }]
+    }
+  });
+</script>
+  {% endblock %}

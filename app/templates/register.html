@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-5">
+                <h2 class="card-title text-center mb-4">Create Your Account</h2>
+
+                <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <!-- Username -->
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            {{ form.username(class="form-control", placeholder="Choose a username") }}
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.username.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            {{ form.email(class="form-control", placeholder="Your email address") }}
+                        </div>
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="mb-3">
+                        {{ form.phone.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            {{ form.phone(class="form-control", placeholder="Your phone number") }}
+                        </div>
+                        {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.phone.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            {{ form.password(class="form-control", placeholder="Create a password", id="password") }}
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength mt-2">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small id="password-strength-text" class="text-muted">Password strength</small>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-3">
+                        {{ form.confirm_password.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            {{ form.confirm_password(class="form-control", placeholder="Confirm your password", id="confirm_password") }}
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.confirm_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.confirm_password.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Agree Terms -->
+                    <div class="mb-3 form-check">
+                        {{ form.agree_terms(class="form-check-input") }}
+                        {{ form.agree_terms.label(class="form-check-label") }}
+                        {% if form.agree_terms.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.agree_terms.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-success btn-lg" id="registerButton">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            Register
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const inputId = this.parentNode.querySelector('input').id;
+            const passwordInput = document.getElementById(inputId);
+            const icon = this.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+    });
+
+    // Password strength meter
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+
+        strengthBar.style.width = '0%';
+        strengthBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+
+        if (password.length === 0) {
+            strengthText.textContent = 'Password strength';
+            return;
+        }
+
+        let strength = 0;
+        if (password.length > 7) strength += 1;
+        if (password.length > 11) strength += 1;
+        if (/\d/.test(password)) strength += 1;
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+
+        if (strength <= 2) {
+            strengthBar.style.width = '33%';
+            strengthBar.classList.add('bg-danger');
+            strengthText.textContent = 'Weak';
+        } else if (strength <= 4) {
+            strengthBar.style.width = '66%';
+            strengthBar.classList.add('bg-warning');
+            strengthText.textContent = 'Medium';
+        } else {
+            strengthBar.style.width = '100%';
+            strengthBar.classList.add('bg-success');
+            strengthText.textContent = 'Strong';
+        }
+    });
+
+    // Spinner on submit
+    document.querySelector('form').addEventListener('submit', function () {
+        const registerButton = document.getElementById('registerButton');
+        const spinner = registerButton.querySelector('.spinner-border');
+        registerButton.disabled = true;
+        spinner.classList.remove('d-none');
+    });
+
+    // Password match validation
+    document.getElementById('confirm_password').addEventListener('input', function () {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
+
+        if (confirmPassword && password !== confirmPassword) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}Transactions{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="card-title mb-0">Transactions</h2>
+            <div>
+                <a href="{{ url_for('dashboard.add_expense') }}" class="btn btn-danger btn-sm me-2">
+                    <i class="fas fa-plus me-1"></i> Add Expense
+                </a>
+                <a href="{{ url_for('dashboard.add_income') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add Income
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <form method="GET" class="mb-4" action="{{url_for('dashboard.transactions')}}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Type</label>
+                    <select class="form-select" id="type" name="type">
+                        <option value="">All</option>
+                        <option value="income" {% if selected_type == 'income' %}selected{% endif %}>Income</option>
+                        <option value="expense" {% if selected_type == 'expense' %}selected{% endif %}>Expense</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">All</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if request.args.get('category') == category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">From</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">To</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search" name="search" placeholder="Search descriptions..." value="{{ request.args.get('search', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('dashboard.transactions') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo me-1"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Transactions Table -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>
+                            <a href="?sort=date&order={% if request.args.get('sort') == 'date' and request.args.get('order') == 'asc' %}desc{% else %}asc{% endif %}{% for key, value in request.args.items() %}{% if key not in ['sort', 'order'] %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                Date
+                                {% if request.args.get('sort') == 'date' %}
+                                    <i class="fas fa-sort-{% if request.args.get('order') == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
+                                {% else %}
+                                    <i class="fas fa-sort ms-1"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>
+                            <a href="?sort=amount&order={% if request.args.get('sort') == 'amount' and request.args.get('order') == 'asc' %}desc{% else %}asc{% endif %}{% for key, value in request.args.items() %}{% if key not in ['sort', 'order'] %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                Amount
+                                {% if request.args.get('sort') == 'amount' %}
+                                    <i class="fas fa-sort-{% if request.args.get('order') == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
+                                {% else %}
+                                    <i class="fas fa-sort ms-1"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if transactions %}
+                        {% for t in transactions %}
+                        <tr>
+                            <td>{{ t.date.strftime('%d %b %Y') }}</td>
+                            <td>{{ t.description }}</td>
+                            <td>{{ t.category.name if t.category.name is defined else t.category }}</td>
+                            <td class="fw-bold text-{% if t.type == 'income' %}success{% else %}danger{% endif %}">
+                                {{ '+' if t.type == 'income' else '-' }}₹{{ '%.2f' | format(t.amount) }}
+                            </td>
+                            <td>{{ t.payment_method }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('dashboard.edit_transaction', transaction_id=t.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ t.id }}" data-description="{{ t.description }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-exchange-alt fa-3x text-muted"></i>
+                                </div>
+                                <h5>No transactions found</h5>
+                                <p class="text-muted">Try adjusting your filters or add a new transaction</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if transactions and pagination.pages > 1 %}
+    {% set args = request.args.to_dict() %}
+    {% set _ = args.pop('page', None) %}
+
+    <nav aria-label="Transaction pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if pagination.has_prev %}
+                {% set prev_args = args.copy() %}
+                {% set _ = prev_args.update({'page': pagination.prev_num}) %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('dashboard.transactions', **prev_args) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+            {% endif %}
+
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% set temp_args = args.copy() %}
+                    {% set _ = temp_args.update({'page': page_num}) %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('dashboard.transactions', **temp_args) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+                {% set next_args = args.copy() %}
+                {% set _ = next_args.update({'page': pagination.next_num}) %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('dashboard.transactions', **next_args) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the transaction "<span id="transactionDescription"></span>"?
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" method="POST" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const descriptionSpan = document.getElementById('transactionDescription');
+        const deleteForm = document.getElementById('deleteForm');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.getAttribute('data-id');
+                const description = button.getAttribute('data-description');
+                descriptionSpan.textContent = description;
+                deleteForm.action = `/transactions/${id}/delete`;
+                deleteModal.show();
+            });
+        });
+    });
+</script>
+{% endblock %}

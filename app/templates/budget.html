@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+
+<h2 class="mb-4">Your Budgets</h2>
+
+<table class="table table-bordered shadow-sm">
+  <thead class="table-light">
+    <tr>
+      <th>Category</th>
+      <th>Budget (₹)</th>
+      <th>Spent (₹)</th>
+      <th>Remaining (₹)</th>
+      <th>Usage</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for budget in budgets %}
+    <tr>
+      <td>{{ budget.category.name }}</td>
+      <td>
+        {% if edit_id == budget.id %}
+        <form method="POST" action="{{ url_for('dashboard.edit_budget', id=budget.id) }}">
+          <input type="number" name="amount" value="{{ budget.amount }}" class="form-control form-control-sm" step="0.01" required>
+        {% else %}
+          {{ budget.amount }}
+        {% endif %}
+      </td>
+      <td>{{ budget.spent }}</td>
+      <td>{{ budget.remaining }}</td>
+      <td>
+        <div class="progress">
+          <div class="progress-bar {% if budget.usage >= 90 %}bg-danger{% elif budget.usage >= 75 %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ budget.usage }}%">
+            {{ budget.usage }}%
+          </div>
+        </div>
+      </td>
+      <td>
+        {% if edit_id == budget.id %}
+          <button type="submit" class="btn btn-sm btn-success">Save</button>
+          <a href="{{ url_for('dashboard.budget') }}" class="btn btn-sm btn-secondary">Cancel</a>
+        </form>
+        {% else %}
+          <a href="{{ url_for('dashboard.budget', edit_id=budget.id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <a href="{{ url_for('dashboard.delete_budget', id=budget.id) }}" class="btn btn-sm btn-danger">Delete</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div style="max-width: 500px ; margin: 0 auto;">
+<canvas id="budgetPieChart"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('budgetPieChart').getContext('2d');
+const pieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: [{% for b in budgets %}'{{ b.category.name }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Spent',
+            data: [{% for b in budgets %}{{ b.spent }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+              '#007bff', '#dc3545', '#ffc107', '#28a745', '#6f42c1', '#17a2b8'
+            ]
+        }]
+    }
+});
+</script>
+
+<hr class="my-5" />
+<h4>Add New Budget</h4>
+<form method="POST" action="{{ url_for('dashboard.add_budget') }}">
+  <div class="mb-3">
+    <label for="category" class="form-label">Category</label>
+    <select class="form-select" name="category_id" required>
+      {% for category in categories %}
+      <option value="{{ category.id }}">{{ category.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="amount" class="form-label">Budget Amount (₹)</label>
+    <input type="number" step="0.01" name="amount" class="form-control" required />
+  </div>
+  <button type="submit" class="btn btn-primary">Add Budget</button>
+</form>
+
+{% endblock %}

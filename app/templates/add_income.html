@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Add Income{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title mb-4">Add Income</h2>
+                
+                <form method="POST" action="{{ url_for('dashboard.add_income') }}" novalidate>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="amount" class="form-control" placeholder="0.00" required step="0.01">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="source" class="form-label">Source</label>
+                            <select name="source" class="form-select" required>
+                                <option value="">Select Source</option>
+                                <option value="Salary">Salary</option>
+                                <option value="Freelance">Freelance</option>
+                                <option value="Business">Business</option>
+                                <option value="Investments">Investments</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Refunds">Refunds</option>
+                                <option value=">Scholarship">Scholarship</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control" placeholder="Salary, Freelance work, etc.">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" name="date" id="date" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="">Select Method</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Bank">Bank</option>
+                                <option value="UPI">UPI</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="recurring" class="form-label">Recurring</label>
+                        <select name="recurring" class="form-select">
+                            <option value="No">No</option>
+                            <option value="Monthly">Monthly</option>
+                            <option value="Weekly">Weekly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Any additional notes..."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveIncome">
+                            <i class="fas fa-save me-1"></i> Save Income
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="incomeToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Income added successfully!
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set today's date as default
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+    });
+
+    // Show toast on form submission
+    document.querySelector('form').addEventListener('submit', function (e) {
+        // Optionally prevent actual submission for demo:
+        // e.preventDefault();
+
+        const toast = new bootstrap.Toast(document.getElementById('incomeToast'));
+        toast.show();
+
+        // Optional: reset form after delay
+        setTimeout(() => {
+            this.reset();
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        }, 2000);
+    });
+</script>
+{% endblock %}

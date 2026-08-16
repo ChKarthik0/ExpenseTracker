@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">💡 AI Financial Insights</h2>
+
+    <div id="insights-container" class="bg-light p-4 rounded shadow">
+        {% if insights %}
+            <pre id="insights-text" class="fs-6">{{ insights }}</pre>
+        {% else %}
+            <p id="insights-text" class="text-muted">Click below to generate insights.</p>
+        {% endif %}
+    </div>
+
+    <div class="text-center mt-4">
+        <button id="generate-insights" class="btn btn-primary">🔁 Generate New Insights</button>
+        <div id="loading" class="mt-2 text-info d-none">Generating insights...</div>
+    </div>
+</div>
+
+<script>
+document.getElementById("generate-insights").addEventListener("click", function () {
+    const loading = document.getElementById("loading");
+    const insightsText = document.getElementById("insights-text");
+
+    loading.classList.remove("d-none");
+    insightsText.textContent = "";
+
+    fetch("/insights/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            insightsText.textContent = data.insights;
+        } else {
+            insightsText.textContent = "⚠ " + data.error;
+        }
+    })
+    .catch(err => {
+        insightsText.textContent = "⚠ Error connecting to server.";
+    })
+    .finally(() => {
+        loading.classList.add("d-none");
+    });
+});
+</script>
+{% endblock %}

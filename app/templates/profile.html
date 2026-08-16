@@ -1,0 +1,337 @@
+{% extends "index.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title mb-4">Your Profile</h2>
+                
+                <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button">Profile</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button">Password</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="danger-tab" data-bs-toggle="tab" data-bs-target="#danger" type="button">Delete Account</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="profileTabsContent">
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade show active" id="profile" role="tabpanel">
+                        <form method="POST" action="{{ url_for('dashboard.profile') }}" enctype="multipart/form-data">
+                            {{ profile_form.hidden_tag() }}
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-3 text-center">
+                                    <div class="position-relative d-inline-block">
+                                        <img src="{{ current_user.avatar_url or url_for('static', filename='images/default-avatar.png') }}" 
+                                             class="rounded-circle" 
+                                             width="120" 
+                                             height="120" 
+                                             alt="Profile picture"
+                                             id="avatarPreview">
+                                        <label for="avatar" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                        <input type="file" class="d-none" id="avatar" name="avatar" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="mb-3">
+                                        {{ profile_form.username.label(class="form-label") }}
+                                        {{ profile_form.username(class="form-control", value=current_user.username) }}
+                                        {% if profile_form.username.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ profile_form.username.errors[0] }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        {{ profile_form.email.label(class="form-label") }}
+                                        {{ profile_form.email(class="form-control", value=current_user.email) }}
+                                        {% if profile_form.email.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ profile_form.email.errors[0] }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Member Since</label>
+                                        <input type="text" class="form-control" value="{{ current_user.created_at.strftime('%B %d, %Y') }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">Update Profile</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Password Tab -->
+                    <div class="tab-pane fade" id="password" role="tabpanel">
+                        <form method="POST" action="{{ url_for('dashboard.profile') }}">
+                            {{ password_form.hidden_tag() }}
+                            
+                            <div class="mb-3">
+                                {{ password_form.current_password.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ password_form.current_password(class="form-control", id="currentPassword") }}
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="currentPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                {% if password_form.current_password.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ password_form.current_password.errors[0] }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ password_form.new_password.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ password_form.new_password(class="form-control", id="newPassword") }}
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="newPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength mt-2">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small id="password-strength-text" class="text-muted">Password strength</small>
+                                </div>
+                                {% if password_form.new_password.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ password_form.new_password.errors[0] }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ password_form.confirm_password.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ password_form.confirm_password(class="form-control", id="confirmPassword") }}
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                {% if password_form.confirm_password.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ password_form.confirm_password.errors[0] }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">Change Password</button>
+                            </div>
+                        </form>
+                    </div>
+                
+                    
+                    <!-- Danger Zone Tab -->
+                    <div class="tab-pane fade" id="danger" role="tabpanel">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> These actions are irreversible. Proceed with caution.
+                        </div>
+                        
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white">
+                                Export Your Data
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Download all your data</h5>
+                                <p class="card-text">Before deleting your account, you may want to download all your data for your records.</p>
+                                <a href="{{ url_for('dashboard.export_csv') }}?all=true" class="btn btn-outline-danger">
+                                    <i class="fas fa-file-export me-1"></i> Export All Data
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger text-white">
+                                Delete Account
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Permanently delete your account</h5>
+                                <p class="card-text">This will immediately delete all your data and cannot be undone.</p>
+                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                    <i class="fas fa-trash-alt me-1"></i> Delete My Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('dashboard.delete_account') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <p>This action will <strong>permanently delete</strong> all your data, including:</p>
+                        <ul>
+                            <li>All transactions</li>
+                            <li>Budget settings</li>
+                            <li>Account preferences</li>
+                        </ul>
+                        <p>This cannot be undone. Are you sure you want to proceed?</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirmEmail" class="form-label">To confirm, type your email address:</label>
+                        <input type="email" class="form-control" id="confirmEmail" name="confirm_email" required>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" name="confirm_delete" required>
+                        <label class="form-check-label" for="confirmDelete">I understand this action cannot be undone</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Permanently Delete Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Avatar preview
+        const avatarInput = document.getElementById('avatar');
+        const avatarPreview = document.getElementById('avatarPreview');
+        
+        avatarInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                }
+            });
+        });
+        
+        // Password strength meter
+        document.getElementById('newPassword').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('password-strength-bar');
+            const strengthText = document.getElementById('password-strength-text');
+            
+            // Reset
+            strengthBar.style.width = '0%';
+            strengthBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+            
+            if (password.length === 0) {
+                strengthText.textContent = 'Password strength';
+                return;
+            }
+            
+            // Calculate strength
+            let strength = 0;
+            
+            // Length
+            if (password.length > 7) strength += 1;
+            if (password.length > 11) strength += 1;
+            
+            // Contains numbers
+            if (/\d/.test(password)) strength += 1;
+            
+            // Contains special chars
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
+            
+            // Contains both lower and upper case
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+            
+            // Update UI
+            if (strength <= 2) {
+                strengthBar.style.width = '33%';
+                strengthBar.classList.add('bg-danger');
+                strengthText.textContent = 'Weak';
+            } else if (strength <= 4) {
+                strengthBar.style.width = '66%';
+                strengthBar.classList.add('bg-warning');
+                strengthText.textContent = 'Medium';
+            } else {
+                strengthBar.style.width = '100%';
+                strengthBar.classList.add('bg-success');
+                strengthText.textContent = 'Strong';
+            }
+        });
+        
+        // Confirm email matches before account deletion
+        const deleteForm = document.querySelector('#deleteAccountModal form');
+        const confirmEmail = document.getElementById('confirmEmail');
+        
+        deleteForm.addEventListener('submit', function(e) {
+            if (confirmEmail.value !== "{{ current_user.email }}") {
+                e.preventDefault();
+                confirmEmail.classList.add('is-invalid');
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback d-block';
+                errorDiv.textContent = 'Email does not match your account email';
+                
+                const existingError = confirmEmail.nextElementSibling;
+                if (existingError && existingError.classList.contains('invalid-feedback')) {
+                    existingError.remove();
+                }
+                
+                confirmEmail.parentNode.appendChild(errorDiv);
+            }
+        });
+        
+        // Clear error when typing
+        confirmEmail.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                this.classList.remove('is-invalid');
+                const errorDiv = this.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                    errorDiv.remove();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
